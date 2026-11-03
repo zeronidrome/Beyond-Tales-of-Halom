@@ -1,0 +1,1269 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beyond: Tales of Halom</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=MedievalSharp&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { user-select: none; -webkit-user-select: none; }
+        body {
+            background-color: #0c0a09;
+            color: #f5f5f4;
+            font-family: 'Outfit', sans-serif;
+            overflow-x: hidden;
+        }
+        .font-title { font-family: 'Cinzel', serif; }
+        .font-story { font-family: 'MedievalSharp', cursive; }
+        
+        .parchment-panel {
+            background: radial-gradient(circle, #1c1917 0%, #0c0a09 100%);
+            border: 2px solid #78350f;
+            box-shadow: 0 0 25px rgba(0, 0, 0, 0.9), inset 0 0 15px rgba(120, 53, 15, 0.3);
+        }
+        .parchment-card {
+            background: rgba(28, 25, 23, 0.85);
+            border: 1px solid #92400e;
+            box-shadow: inset 0 0 10px rgba(146, 64, 14, 0.2);
+        }
+        .parchment-card:hover {
+            border-color: #f59e0b;
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
+        }
+        .active-turn-card {
+            border-color: #38bdf8 !important;
+            box-shadow: 0 0 18px rgba(56, 189, 248, 0.45), inset 0 0 10px rgba(56, 189, 248, 0.2) !important;
+            transform: scale(1.02);
+        }
+
+        .glow-gold { text-shadow: 0 0 10px rgba(245, 158, 11, 0.6); }
+        .glow-crimson { text-shadow: 0 0 10px rgba(239, 68, 68, 0.7); }
+        .glow-azure { text-shadow: 0 0 10px rgba(56, 189, 248, 0.7); }
+        .glow-void { text-shadow: 0 0 15px rgba(168, 85, 247, 0.8); }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0c0a09; }
+        ::-webkit-scrollbar-thumb { background: #78350f; border-radius: 3px; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between p-2 sm:p-6 relative">
+
+    <!-- TOP HEADER / GAME STATS -->
+    <header class="w-full max-w-5xl mx-auto flex justify-between items-center z-20 mb-3 px-2">
+        <div class="flex items-center gap-2 sm:gap-3">
+            <div class="parchment-card px-3 sm:px-4 py-1.5 rounded-lg border-amber-800 flex items-center gap-2">
+                <span class="text-amber-500 font-title text-xs sm:text-sm">PAHLAWAN:</span>
+                <span id="ui-hero-name" class="font-bold text-amber-200 text-xs sm:text-sm">Valerius</span>
+            </div>
+            <div class="parchment-card px-3 py-1.5 rounded-lg border-amber-800 flex items-center gap-2">
+                <span class="text-amber-500 font-title text-xs">PERAN:</span>
+                <span id="ui-hero-job" class="text-amber-100 text-xs font-semibold">-</span>
+            </div>
+            <div class="parchment-card px-3 py-1.5 rounded-lg border-amber-800 flex items-center gap-2">
+                <span class="text-amber-500 font-title text-xs">TINGKAT:</span>
+                <span id="ui-difficulty-label" class="text-amber-300 text-xs font-bold">NORMAL (1.2x)</span>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2 sm:gap-3">
+            <div class="parchment-card px-3 py-1.5 rounded-lg border-amber-800 flex items-center gap-2">
+                <span class="text-amber-400 font-title text-xs">LEVEL:</span>
+                <span id="ui-hero-level" class="font-bold text-amber-300 text-xs sm:text-sm">1</span>
+            </div>
+            <button id="btn-open-skill-tree" class="hidden bg-amber-900/60 hover:bg-amber-800 border border-amber-600 text-amber-200 text-xs px-3 py-1.5 rounded-lg font-title transition">
+                📜 POHON KEAHLIAN
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN GAME DISPLAY -->
+    <main class="w-full max-w-5xl mx-auto flex-1 flex flex-col items-center justify-center relative z-10">
+
+        <!-- SCREEN 1: CHARACTER CREATION & DIFFICULTY SELECT -->
+        <section id="screen-char-creation" class="w-full parchment-panel rounded-2xl p-6 md:p-8 flex flex-col items-center max-w-2xl">
+            <h1 class="font-title text-3xl md:text-4xl text-amber-400 glow-gold text-center mb-1">BEYOND: TALES OF HALOM</h1>
+            <p class="font-story text-amber-200/80 text-center text-lg mb-4">Takdir & Kehormatan Kota Ronyho</p>
+            
+            <div class="bg-purple-950/40 border border-purple-600/50 rounded-xl p-3 mb-6 w-full text-center">
+                <span class="text-xs text-purple-300 font-bold block mb-1">⚔️ TANTANGAN DITINGKATKAN:</span>
+                <span class="text-[11px] text-purple-200">Sistem Kesulitan Terukur (+20% Stat Musuh per Tingkat), Skill Poin Terpisah Tiap Karakter & Musuh Bertaktik Lebih Tangguh!</span>
+            </div>
+
+            <div class="w-full mb-4">
+                <label class="block text-amber-400 text-xs font-title tracking-wider mb-2">NAMA PAHLAWAN</label>
+                <input type="text" id="input-hero-name" value="Valerius" class="w-full bg-stone-900 border border-amber-800 rounded-xl px-4 py-2.5 text-amber-100 font-bold focus:outline-none focus:border-amber-500 transition">
+            </div>
+
+            <!-- DIFFICULTY SELECTION -->
+            <div class="w-full mb-6">
+                <label class="block text-amber-400 text-xs font-title tracking-wider mb-2">TINGKAT KESULITAN (DIFIKULTAS)</label>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <div class="diff-card parchment-card p-2.5 rounded-xl cursor-pointer text-center border-2 border-stone-800 hover:border-amber-500 transition" data-diff="1.0" data-label="MUDAH (1.0x)">
+                        <span class="text-xs font-bold block text-emerald-400 font-title">MUDAH</span>
+                        <span class="text-[10px] text-stone-400">Stat Base 1.0x</span>
+                    </div>
+                    <div class="diff-card parchment-card p-2.5 rounded-xl cursor-pointer text-center border-2 border-amber-500 bg-amber-950/40 transition" data-diff="1.2" data-label="NORMAL (1.2x)">
+                        <span class="text-xs font-bold block text-amber-300 font-title">NORMAL</span>
+                        <span class="text-[10px] text-amber-400">+20% Stat</span>
+                    </div>
+                    <div class="diff-card parchment-card p-2.5 rounded-xl cursor-pointer text-center border-2 border-stone-800 hover:border-amber-500 transition" data-diff="1.4" data-label="SULIT (1.4x)">
+                        <span class="text-xs font-bold block text-orange-400 font-title">SULIT</span>
+                        <span class="text-[10px] text-stone-400">+40% Stat</span>
+                    </div>
+                    <div class="diff-card parchment-card p-2.5 rounded-xl cursor-pointer text-center border-2 border-stone-800 hover:border-amber-500 transition" data-diff="1.6" data-label="NERAKA (1.6x)">
+                        <span class="text-xs font-bold block text-red-500 font-title">NERAKA</span>
+                        <span class="text-[10px] text-stone-400">+60% Stat</span>
+                    </div>
+                </div>
+            </div>
+
+            <label class="block text-amber-400 text-xs font-title tracking-wider mb-3 w-full">PILIH KELAS UTAMA</label>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 w-full mb-8">
+                <!-- KNIGHT -->
+                <div class="job-card parchment-card p-4 rounded-xl cursor-pointer border-2 border-stone-800 hover:border-amber-500 transition flex flex-col items-center text-center" data-job="Ksatria">
+                    <span class="text-4xl mb-2">🛡️</span>
+                    <h3 class="font-title text-amber-300 font-bold">KSATRIA</h3>
+                    <span class="text-[10px] text-amber-500 font-bold mb-2">PELINDUNG / TEBASAN</span>
+                    <p class="text-xs text-stone-400">Pertahanan fisik kuat, menguasai teknik tebasan dan penarik ancaman musuh.</p>
+                </div>
+                <!-- PRIEST -->
+                <div class="job-card parchment-card p-4 rounded-xl cursor-pointer border-2 border-stone-800 hover:border-amber-500 transition flex flex-col items-center text-center" data-job="Pendeta">
+                    <span class="text-4xl mb-2">✨</span>
+                    <h3 class="font-title text-amber-300 font-bold">PENDETA</h3>
+                    <span class="text-[10px] text-amber-500 font-bold mb-2">PENYEMBUH / SUCI</span>
+                    <p class="text-xs text-stone-400">Penyokong utama tim, mampu memulihkan HP dan membasmi kegelapan.</p>
+                </div>
+                <!-- MAGE -->
+                <div class="job-card parchment-card p-4 rounded-xl cursor-pointer border-2 border-stone-800 hover:border-amber-500 transition flex flex-col items-center text-center" data-job="Penyihir">
+                    <span class="text-4xl mb-2">🔥</span>
+                    <h3 class="font-title text-amber-300 font-bold">PENYIHIR</h3>
+                    <span class="text-[10px] text-amber-500 font-bold mb-2">DAMPAK SIHIR AREA</span>
+                    <p class="text-xs text-stone-400">Daya hancur sihir luar biasa yang mampu membakar & membekukan barisan lawan.</p>
+                </div>
+            </div>
+
+            <button id="btn-confirm-creation" disabled class="w-full bg-gradient-to-r from-amber-700 to-amber-900 hover:from-amber-600 hover:to-amber-800 disabled:opacity-40 text-amber-100 font-title font-bold py-3.5 rounded-xl border border-amber-500/50 shadow-lg transition">
+                MULAI PETUALANGAN HALOM ➔
+            </button>
+        </section>
+
+        <!-- SCREEN 2: TAVERN RECRUITMENT -->
+        <section id="screen-tavern" class="w-full parchment-panel rounded-2xl p-6 md:p-8 flex flex-col items-center max-w-3xl hidden">
+            <span class="text-3xl mb-1">🍺</span>
+            <h2 class="font-title text-2xl md:text-3xl text-amber-400 glow-gold text-center mb-2">KEDAI NAGA LELAP RONYHO</h2>
+            <p class="font-story text-amber-200/80 text-center mb-6">Pilih rekrutan rekan bertualang yang akan mendampingi perjalananmu.</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 w-full mb-8">
+                <!-- VANGUARD COMP -->
+                <div class="party-card parchment-card p-4 rounded-xl cursor-pointer border-2 border-stone-800 hover:border-amber-500 transition flex flex-col text-left" data-party="Garis Depan">
+                    <div class="flex justify-between items-center mb-2">
+                        <h4 class="font-title text-amber-300 font-bold">TIM VANGUARD</h4>
+                        <span class="text-lg">⚔️</span>
+                    </div>
+                    <p class="text-xs text-amber-400 font-bold mb-2">Garrick (Prajurit) & Lyra (Pemanah)</p>
+                    <p class="text-[11px] text-stone-400 leading-relaxed">Kombinasi seimbang antara pertahanan jarak dekat dan tembakan jitu jarak jauh.</p>
+                </div>
+                <!-- ARCANE STRIKE -->
+                <div class="party-card parchment-card p-4 rounded-xl cursor-pointer border-2 border-stone-800 hover:border-amber-500 transition flex flex-col text-left" data-party="Serangan Sihir">
+                    <div class="flex justify-between items-center mb-2">
+                        <h4 class="font-title text-amber-300 font-bold">TIM ARCANE</h4>
+                        <span class="text-lg">🔮</span>
+                    </div>
+                    <p class="text-xs text-amber-400 font-bold mb-2">Vespera (Penyihir) & Kael (Pencuri)</p>
+                    <p class="text-[11px] text-stone-400 leading-relaxed">Fokus pada serangan kritis berkecepatan tinggi serta sihir elemen berdaya rusak tinggi.</p>
+                </div>
+                <!-- HOLY SUPPORT -->
+                <div class="party-card parchment-card p-4 rounded-xl cursor-pointer border-2 border-stone-800 hover:border-amber-500 transition flex flex-col text-left" data-party="Dukungan Kudus">
+                    <div class="flex justify-between items-center mb-2">
+                        <h4 class="font-title text-amber-300 font-bold">TIM SANCTUARY</h4>
+                        <span class="text-lg">🌿</span>
+                    </div>
+                    <p class="text-xs text-amber-400 font-bold mb-2">Thaddeus (Biarawan) & Eleanor (Paladin)</p>
+                    <p class="text-[11px] text-stone-400 leading-relaxed">Pertahanan maksimal, perisai energi, dan pemulihan status rutin selama bertarung.</p>
+                </div>
+            </div>
+
+            <button id="btn-confirm-tavern" disabled class="w-full bg-gradient-to-r from-amber-700 to-amber-900 hover:from-amber-600 hover:to-amber-800 disabled:opacity-40 text-amber-100 font-title font-bold py-3.5 rounded-xl border border-amber-500/50 transition">
+                REKRUT REKAN & BERANGKAT ➔
+            </button>
+        </section>
+
+        <!-- INTERACTIVE WORLD MAP SCREEN -->
+        <section id="screen-world-map" class="w-full parchment-panel rounded-2xl p-6 md:p-8 flex flex-col items-center max-w-3xl hidden">
+            <span class="text-4xl mb-1">🗺️</span>
+            <h2 class="font-title text-2xl md:text-3xl text-amber-400 glow-gold text-center mb-1">PETA WILAYAH HALOM & RONYHO</h2>
+            <p class="font-story text-amber-200/80 text-center mb-6">Pilih rute ekspedisi timmu. Setiap wilayah memiliki ancaman, rahasia, dan hadiah unik!</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 w-full mb-6">
+                <!-- NODE 1: DESA TERBAKAR -->
+                <div class="map-node parchment-card p-4 rounded-xl border-2 border-amber-900 hover:border-amber-500 transition cursor-pointer flex flex-col justify-between" onclick="selectMapNode('DESA_TERBAKAR')">
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <h4 class="font-title text-amber-300 font-bold text-sm">🔥 DESA KILANG</h4>
+                            <span class="text-[10px] bg-red-950 text-red-300 px-2 py-0.5 rounded border border-red-800">SEDANG</span>
+                        </div>
+                        <p class="text-xs text-stone-400">Penyamun menyerang warga desa. Banyak perbekalan dapat diselamatkan!</p>
+                    </div>
+                    <span class="text-xs text-amber-400 font-bold mt-3 text-right">EKSPLORASI ➔</span>
+                </div>
+
+                <!-- NODE 2: KARAVAN PEDAGANG -->
+                <div class="map-node parchment-card p-4 rounded-xl border-2 border-amber-900 hover:border-amber-500 transition cursor-pointer flex flex-col justify-between" onclick="selectMapNode('KARAVAN')">
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <h4 class="font-title text-emerald-300 font-bold text-sm">🛒 KARAVAN PEDAGANG</h4>
+                            <span class="text-[10px] bg-emerald-950 text-emerald-300 px-2 py-0.5 rounded border border-emerald-800">AMAN</span>
+                        </div>
+                        <p class="text-xs text-stone-400">Tempat aman untuk beristirahat dan memulihkan tenaga tim.</p>
+                    </div>
+                    <span class="text-xs text-emerald-400 font-bold mt-3 text-right">EKSPLORASI ➔</span>
+                </div>
+
+                <!-- NODE 3: LEMBAH KABUT -->
+                <div class="map-node parchment-card p-4 rounded-xl border-2 border-amber-900 hover:border-amber-500 transition cursor-pointer flex flex-col justify-between" onclick="selectMapNode('LEMBAH')">
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <h4 class="font-title text-sky-300 font-bold text-sm">🌫️ LEMBAH KABUT</h4>
+                            <span class="text-[10px] bg-sky-950 text-sky-300 px-2 py-0.5 rounded border border-sky-800">EXP BONUS</span>
+                        </div>
+                        <p class="text-xs text-stone-400">Serigala ganas berisikan monster liar yang memberikan bonus EXP tinggi!</p>
+                    </div>
+                    <span class="text-xs text-sky-400 font-bold mt-3 text-right">EKSPLORASI ➔</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- EVENT POPUP SCREEN -->
+        <section id="screen-event" class="w-full parchment-panel rounded-2xl p-6 md:p-8 flex flex-col items-center max-w-2xl hidden">
+            <span id="event-icon" class="text-4xl mb-2">⛺</span>
+            <h3 id="event-title" class="font-title text-xl md:text-2xl text-amber-400 glow-gold text-center mb-2">PERISTIWA DI JALANAN</h3>
+            <p id="event-desc" class="font-story text-base text-amber-100/90 text-center mb-6 leading-relaxed"></p>
+            <button id="btn-event-continue" class="bg-gradient-to-r from-amber-700 to-amber-900 hover:from-amber-600 hover:to-amber-800 text-amber-100 font-title font-bold px-6 py-2.5 rounded-xl border border-amber-500 transition">
+                LANJUTKAN PERJALANAN ➔
+            </button>
+        </section>
+
+        <!-- CAMPSITE REST SCREEN -->
+        <section id="screen-camp" class="w-full parchment-panel rounded-2xl p-6 md:p-8 flex flex-col items-center max-w-2xl hidden">
+            <span class="text-4xl mb-2">🔥</span>
+            <h3 class="font-title text-xl md:text-2xl text-amber-400 glow-gold text-center mb-2">PERKEMAHAN & TEMPAT ISTIRAHAT</h3>
+            <p class="font-story text-base text-amber-100/90 text-center mb-6 leading-relaxed">
+                Api unggun hangat menyala di tengah malam perbatasan Ronyho. Ini kesempatan bagimu dan anggota tim untuk memulihkan tenaga serta mengatur keahlian sebelum melangkah ke wilayah berbahaya berikutnya.
+            </p>
+            <div class="flex gap-4">
+                <button id="btn-camp-rest" class="bg-gradient-to-r from-emerald-800 to-teal-900 hover:from-emerald-700 hover:to-teal-800 text-emerald-100 font-title font-bold px-6 py-3 rounded-xl border border-emerald-500/40 shadow-md transition">
+                    ⛺ ISTIRAHAT & PULIHKAN (HP/MP FULL)
+                </button>
+                <button id="btn-camp-skip" class="bg-stone-800 hover:bg-stone-700 text-stone-300 font-title font-bold px-6 py-3 rounded-xl border border-stone-600 text-xs transition">
+                    LANGSUNG LANJUT ➔
+                </button>
+            </div>
+        </section>
+
+        <!-- SCREEN 3: STORY DIALOGUE MODE -->
+        <section id="screen-story" class="w-full parchment-panel rounded-2xl p-6 md:p-8 flex flex-col items-center max-w-3xl hidden">
+            <div class="w-full flex justify-between items-center border-b border-amber-900/60 pb-3 mb-4">
+                <span id="story-act-title" class="font-title text-amber-400 text-sm tracking-widest uppercase">BABAK 1: SERANGAN GERBANG KOTA RONYHO</span>
+                <span id="story-location" class="text-xs text-amber-200/60 font-story">Pinggiran Kota Ronyho</span>
+            </div>
+
+            <div class="w-full min-h-[150px] parchment-card rounded-xl p-5 mb-6">
+                <p id="story-text-body" class="font-story text-lg text-amber-100/90 leading-relaxed">
+                    Asap hitam membumbung tinggi di langit Kota Ronyho...
+                </p>
+            </div>
+
+            <div id="story-choices-container" class="w-full flex flex-col gap-3"></div>
+        </section>
+
+        <!-- SCREEN 4: TACTICAL JRPG BATTLE ARENA -->
+        <section id="screen-combat" class="w-full flex flex-col items-center max-w-4xl hidden">
+            <!-- ACTION LOG DISPLAY -->
+            <div class="w-full parchment-panel rounded-xl p-3 mb-3 border border-amber-900/80 bg-black/60">
+                <div class="flex justify-between items-center border-b border-amber-900/40 pb-1 mb-1.5">
+                    <span class="font-title text-[11px] text-amber-400 uppercase tracking-widest">📜 LOG PERTEMPURAN</span>
+                    <span id="ui-combat-turn-log" class="font-bold text-amber-300 text-xs">Giliran Bertarung</span>
+                </div>
+                <div id="combat-action-log" class="h-24 overflow-y-auto text-xs space-y-1 font-mono text-stone-300 pr-1">
+                    <div class="text-amber-500/80">--- Pertempuran dimulai! ---</div>
+                </div>
+            </div>
+
+            <!-- ENEMY DISPLAY AREA -->
+            <div class="w-full parchment-panel rounded-2xl p-4 mb-4 border-2 border-amber-800">
+                <div class="flex justify-between items-center border-b border-amber-900/60 pb-2 mb-3">
+                    <span class="font-title text-xs text-amber-400 uppercase">BARISAN MUSUH</span>
+                </div>
+                <div id="enemy-cards-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 min-h-[130px]">
+                    <!-- Dynamic Enemy Cards -->
+                </div>
+            </div>
+
+            <!-- PARTY STATUS & ACTION CONTROLS -->
+            <div class="w-full grid grid-cols-1 md:grid-cols-4 gap-3">
+                <div id="combat-party-hud" class="md:col-span-3 grid grid-cols-3 gap-2"></div>
+
+                <div class="flex flex-col gap-2 justify-center">
+                    <div class="text-center font-title text-amber-400 text-xs mb-1">
+                        GILIRAN: <span id="ui-active-actor-name" class="text-amber-200 font-bold">-</span>
+                    </div>
+                    <button id="btn-act-attack" class="bg-gradient-to-r from-amber-700 to-amber-900 hover:from-amber-600 hover:to-amber-800 text-amber-100 font-title font-bold py-2.5 rounded-xl border border-amber-500/40 text-xs shadow-md transition">
+                        ⚔️ SERANG BIASA
+                    </button>
+                    <button id="btn-act-skill" class="bg-gradient-to-r from-blue-800 to-indigo-900 hover:from-blue-700 hover:to-indigo-800 text-blue-100 font-title font-bold py-2.5 rounded-xl border border-blue-500/40 text-xs shadow-md transition">
+                        🔮 KEMAMPUAN / SIHIR
+                    </button>
+                    <button id="btn-act-defend" class="bg-gradient-to-r from-stone-800 to-stone-900 hover:from-stone-700 hover:to-stone-800 text-stone-200 font-title font-bold py-2.5 rounded-xl border border-stone-600 text-xs shadow-md transition">
+                        🛡️ BERTAHAN (+HP/DEF)
+                    </button>
+                </div>
+            </div>
+
+            <!-- MODAL TARGET SELECTOR -->
+            <div id="modal-target-select" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+                <div class="parchment-panel rounded-2xl p-6 max-w-md w-full border-amber-700">
+                    <h3 class="font-title text-amber-400 text-base mb-3 border-b border-amber-900 pb-2">PILIH TARGET MUSUH</h3>
+                    <div id="target-list-container" class="flex flex-col gap-2 mb-4"></div>
+                    <button id="btn-cancel-target" class="w-full bg-stone-800 hover:bg-stone-700 text-stone-300 font-title text-xs py-2 rounded-xl transition">BATAL</button>
+                </div>
+            </div>
+
+            <!-- SKILL SUBMENU MODAL -->
+            <div id="modal-skills" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+                <div class="parchment-panel rounded-2xl p-6 max-w-md w-full border-amber-700">
+                    <div class="flex justify-between items-center mb-4 border-b border-amber-900 pb-2">
+                        <h3 class="font-title text-amber-400 text-base">PILIH JURUS / MANTRA</h3>
+                        <button id="btn-close-skills" class="text-stone-400 hover:text-white font-bold">✕</button>
+                    </div>
+                    <div id="skill-list-container" class="flex flex-col gap-2.5 mb-2 max-h-[60vh] overflow-y-auto"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SCREEN 5: BRANCHING SKILL TREE MODAL -->
+        <section id="modal-skill-tree" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+            <div class="parchment-panel rounded-2xl p-6 max-w-2xl w-full border-amber-700 flex flex-col max-h-[85vh]">
+                <div class="flex justify-between items-center mb-4 border-b border-amber-900 pb-2">
+                    <div>
+                        <h3 class="font-title text-amber-400 text-xl glow-gold">POHON KEAHLIAN ANGOTA TIM</h3>
+                        <p class="text-xs text-amber-200/70">Poin Keahlian Anggota: <span id="tree-points-count" class="text-amber-400 font-bold">0</span></p>
+                    </div>
+                    <button id="btn-close-tree" class="text-stone-400 hover:text-white font-bold text-lg">✕</button>
+                </div>
+
+                <!-- TABS FOR HERO AND COMPANIONS -->
+                <div id="skill-tree-tabs" class="flex gap-2 border-b border-amber-900/60 pb-2 mb-3 overflow-x-auto"></div>
+
+                <div id="tree-skills-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto pr-1 my-2"></div>
+            </div>
+        </section>
+
+        <!-- SCREEN 6: GAME ENDING OVERLAY -->
+        <section id="screen-ending" class="w-full parchment-panel rounded-2xl p-8 flex flex-col items-center max-w-2xl hidden text-center">
+            <span id="ending-icon" class="text-6xl mb-4">👑</span>
+            <h1 id="ending-title" class="font-title text-3xl md:text-4xl text-amber-400 glow-gold mb-3">TAKDIR HALOM HASIL AKHIR</h1>
+            <p id="ending-body" class="font-story text-lg text-amber-100/90 leading-relaxed mb-8"></p>
+            <button onclick="location.reload()" class="bg-gradient-to-r from-amber-700 to-amber-900 hover:from-amber-600 hover:to-amber-800 text-amber-100 font-title font-bold px-8 py-3 rounded-xl border border-amber-500 transition">
+                MULAI PETUALANGAN BARU ↺
+            </button>
+        </section>
+
+    </main>
+
+    <footer class="w-full max-w-5xl mx-auto text-center py-2 text-[11px] text-amber-950 font-title z-20">
+        BEYOND: TALES OF HALOM • Tactical JRPG Engine (v2.0 Enhanced Balance)
+    </footer>
+
+    <script>
+        const gameState = {
+            heroName: "Valerius",
+            job: null,
+            level: 1,
+            exp: 0,
+            difficultyMult: 1.2,
+            difficultyLabel: "NORMAL (1.2x)",
+            partyComp: null,
+            act: 1,
+            selectedTreeMemberIndex: 0,
+
+            party: [],
+            enemies: [],
+            currentTurnIndex: 0,
+            postCampCallback: null,
+
+            skills: {
+                Ksatria: [
+                    { id: 'k1', name: 'Tebasan Kilat', cost: 10, type: 'single', dmg: 35, desc: 'Tebasan cepat dengan pedang tajam pada 1 musuh.', unlocked: true },
+                    { id: 'k2', name: 'Hantaman Perisai', cost: 15, type: 'single', dmg: 35, stun: true, desc: 'Menggeprak musuh & melumpuhkannya selama 1 giliran.', unlocked: true },
+                    { id: 'k3_a', branch: 'Paladin', name: 'Benteng Pertahanan', cost: 20, type: 'self', desc: 'Meningkatkan pertahanan seluruh tim.', unlocked: false },
+                    { id: 'k3_b', branch: 'Berserker', name: 'Tebasan Karang', cost: 25, type: 'aoe', dmg: 40, desc: 'Tebasan melingkar berdaya hancur ke seluruh barisan musuh.', unlocked: false },
+                    { id: 'k4', branch: 'Warlord', name: 'Aura Pelindung', cost: 30, type: 'heal', desc: 'Memulihkan HP tim dan memberi perlindungan fisik.', unlocked: false },
+                    { id: 'k5', branch: 'Dragon Knight', name: 'Tebasan Naga Halom', cost: 35, type: 'aoe', dmg: 60, desc: 'Tebasan berapi sakti membelah seluruh musuh.', unlocked: false }
+                ],
+                Pendeta: [
+                    { id: 'p1', name: 'Cahaya Penyembuh', cost: 12, type: 'heal', desc: 'Memulihkan 45 HP untuk seluruh anggota tim.', unlocked: true },
+                    { id: 'p2', name: 'Doa Penyuci', cost: 15, type: 'single', dmg: 40, desc: 'Pancaran energi kudus yang membakar musuh.', unlocked: true },
+                    { id: 'p3_a', branch: 'Saint', name: 'Berkah Kehidupan', cost: 22, type: 'heal', desc: 'Memulihkan 70 HP tim dan memulihkan MP.', unlocked: false },
+                    { id: 'p3_b', branch: 'Inquisitor', name: 'Hukuman Langit', cost: 28, type: 'single', dmg: 75, desc: 'Petir kudus dahsyat yang menghantam 1 target.', unlocked: false },
+                    { id: 'p4', branch: 'Exorcist', name: 'Penghancur Kegelapan', cost: 30, type: 'aoe', dmg: 50, desc: 'Gelombang cahaya suci merusak seluruh musuh.', unlocked: false },
+                    { id: 'p5', branch: 'Divine Sovereign', name: 'Doa Mukjizat Halom', cost: 40, type: 'heal', desc: 'Memulihkan HP penuh dan memberikan perisai kudus.', unlocked: false }
+                ],
+                Penyihir: [
+                    { id: 'm1', name: 'Bola Api', cost: 15, type: 'single', dmg: 50, desc: 'Membakar 1 target musuh dengan ledakan api.', unlocked: true },
+                    { id: 'm2', name: 'Tombak Es', cost: 18, type: 'single', dmg: 55, desc: 'Tombak es tajam yang memperlambat gerakan musuh.', unlocked: true },
+                    { id: 'm3_a', branch: 'Pyromancer', name: 'Badai Api Gelora', cost: 25, type: 'aoe', dmg: 45, desc: 'Lautan api membakar seluruh barisan lawan.', unlocked: false },
+                    { id: 'm3_b', branch: 'Cryomancer', name: 'Sambaran Petir', cost: 22, type: 'single', dmg: 70, desc: 'Petir menyambar dari langit menembus pertahanan lawan.', unlocked: false },
+                    { id: 'm4', branch: 'Archmage', name: 'Ledakan Arcane', cost: 35, type: 'aoe', dmg: 65, desc: 'Ledakan sihir murni berdaya hancur dahsyat.', unlocked: false },
+                    { id: 'm5', branch: 'Elementalist Master', name: 'Kiamat Elemen', cost: 45, type: 'aoe', dmg: 85, desc: 'Kombinasi api, es, dan petir menghancurkan barisan musuh.', unlocked: false }
+                ]
+            }
+        };
+
+        const screens = {
+            creation: document.getElementById('screen-char-creation'),
+            tavern: document.getElementById('screen-tavern'),
+            map: document.getElementById('screen-world-map'),
+            event: document.getElementById('screen-event'),
+            camp: document.getElementById('screen-camp'),
+            story: document.getElementById('screen-story'),
+            combat: document.getElementById('screen-combat'),
+            ending: document.getElementById('screen-ending')
+        };
+
+        function showScreen(screenKey) {
+            Object.values(screens).forEach(s => s.classList.add('hidden'));
+            screens[screenKey].classList.remove('hidden');
+        }
+
+        function addCombatLog(msg, colorClass = "text-stone-300") {
+            const logContainer = document.getElementById('combat-action-log');
+            const entry = document.createElement('div');
+            entry.className = colorClass;
+            entry.innerText = msg;
+            logContainer.appendChild(entry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        // Setup Difficulty Selection
+        document.querySelectorAll('.diff-card').forEach(card => {
+            card.addEventListener('click', () => {
+                document.querySelectorAll('.diff-card').forEach(c => {
+                    c.classList.remove('border-amber-500', 'bg-amber-950/40');
+                    c.classList.add('border-stone-800');
+                });
+                card.classList.remove('border-stone-800');
+                card.classList.add('border-amber-500', 'bg-amber-950/40');
+                gameState.difficultyMult = parseFloat(card.dataset.diff);
+                gameState.difficultyLabel = card.dataset.label;
+                document.getElementById('ui-difficulty-label').innerText = gameState.difficultyLabel;
+            });
+        });
+
+        // Setup Job Selection
+        document.querySelectorAll('.job-card').forEach(card => {
+            card.addEventListener('click', () => {
+                document.querySelectorAll('.job-card').forEach(c => c.classList.remove('border-amber-500', 'bg-amber-950/40'));
+                card.classList.add('border-amber-500', 'bg-amber-950/40');
+                gameState.job = card.dataset.job;
+                document.getElementById('btn-confirm-creation').disabled = false;
+            });
+        });
+
+        document.getElementById('btn-confirm-creation').onclick = () => {
+            const nameInput = document.getElementById('input-hero-name').value.trim();
+            if (nameInput) gameState.heroName = nameInput;
+
+            document.getElementById('ui-hero-name').innerText = gameState.heroName;
+            document.getElementById('ui-hero-job').innerText = gameState.job;
+
+            showScreen('tavern');
+        };
+
+        document.querySelectorAll('.party-card').forEach(card => {
+            card.addEventListener('click', () => {
+                document.querySelectorAll('.party-card').forEach(c => c.classList.remove('border-amber-500', 'bg-amber-950/40'));
+                card.classList.add('border-amber-500', 'bg-amber-950/40');
+                gameState.partyComp = card.dataset.party;
+                document.getElementById('btn-confirm-tavern').disabled = false;
+            });
+        });
+
+        document.getElementById('btn-confirm-tavern').onclick = () => {
+            initPartyMembers();
+            triggerRandomTravelEvent(() => startStoryAct1());
+        };
+
+        function initPartyMembers() {
+            gameState.party = [];
+            let heroHp = gameState.job === 'Ksatria' ? 140 : (gameState.job === 'Pendeta' ? 100 : 80);
+            let heroMp = gameState.job === 'Penyihir' ? 90 : (gameState.job === 'Pendeta' ? 80 : 50);
+
+            // Add Hero with individual skill points
+            gameState.party.push({
+                name: gameState.heroName,
+                role: gameState.job,
+                isHero: true,
+                hp: heroHp, maxHp: heroHp,
+                mp: heroMp, maxMp: heroMp,
+                atk: gameState.job === 'Penyihir' ? 28 : (gameState.job === 'Ksatria' ? 22 : 18),
+                skillPoints: 0,
+                stunned: false
+            });
+
+            // Add Companions with individual skill points & updated skill lists
+            if (gameState.partyComp === 'Garis Depan') {
+                gameState.party.push({
+                    name: 'Garrick', role: 'Prajurit', hp: 130, maxHp: 130, mp: 40, maxMp: 40, atk: 20, skillPoints: 0, stunned: false,
+                    skills: [
+                        { id: 'g1', name: 'Tebasan Kuat', cost: 8, type: 'single', dmg: 38, desc: 'Tebasan pedang berat.', unlocked: true },
+                        { id: 'g2', name: 'Sorakan Perang', cost: 15, type: 'heal', desc: 'Memulihkan sedikit HP tim.', unlocked: true },
+                        { id: 'g3', name: 'Hantaman Pelindung', cost: 20, type: 'single', dmg: 55, desc: 'Serangan berat merobek pertahanan.', unlocked: false },
+                        { id: 'g4', name: 'Tebasan Kemurkaan', cost: 25, type: 'aoe', dmg: 50, desc: 'Tebasan pedang melingkar menghantam semua musuh.', unlocked: false },
+                        { id: 'g5', name: 'Tekad Pelindung', cost: 18, type: 'heal', desc: 'Memulihkan 60 HP diri dan memberi pertahanan ekstra.', unlocked: false }
+                    ]
+                });
+                gameState.party.push({
+                    name: 'Lyra', role: 'Pemanah', hp: 90, maxHp: 90, mp: 50, maxMp: 50, atk: 24, skillPoints: 0, stunned: false,
+                    skills: [
+                        { id: 'l1', name: 'Panah Ganda', cost: 10, type: 'single', dmg: 45, desc: 'Tembakan presisi ganda.', unlocked: true },
+                        { id: 'l2', name: 'Hujan Panah', cost: 20, type: 'aoe', dmg: 35, desc: 'Tembakan beruntun ke semua musuh.', unlocked: true },
+                        { id: 'l3', name: 'Tembakan Elang', cost: 25, type: 'single', dmg: 70, desc: 'Panah kritis menembus jantung musuh.', unlocked: false },
+                        { id: 'l4', name: 'Panah Beracun', cost: 18, type: 'single', dmg: 55, desc: 'Panah berlapis racun melumpuhkan target.', unlocked: false },
+                        { id: 'l5', name: 'Badai Panah Ronyho', cost: 32, type: 'aoe', dmg: 65, desc: 'Banjir panah dari udara merusak barisan lawan.', unlocked: false }
+                    ]
+                });
+            } else if (gameState.partyComp === 'Serangan Sihir') {
+                gameState.party.push({
+                    name: 'Vespera', role: 'Penyihir', hp: 80, maxHp: 80, mp: 90, maxMp: 90, atk: 26, skillPoints: 0, stunned: false,
+                    skills: [
+                        { id: 'v1', name: 'Petir Kegelapan', cost: 15, type: 'single', dmg: 50, desc: 'Petir sihir hitam.', unlocked: true },
+                        { id: 'v2', name: 'Ledakan Bayangan', cost: 25, type: 'aoe', dmg: 42, desc: 'Sihir kegelapan area.', unlocked: true },
+                        { id: 'v3', name: 'Singgasana Bayangan', cost: 30, type: 'aoe', dmg: 65, desc: 'Badai bayangan hitam membinasakan lawan.', unlocked: false },
+                        { id: 'v4', name: 'Kutukan Hampa', cost: 20, type: 'single', dmg: 60, desc: 'Mantra purba membakar energi vital musuh.', unlocked: false },
+                        { id: 'v5', name: 'Kiamat Bayangan Halom', cost: 40, type: 'aoe', dmg: 80, desc: 'Ledakan kegelapan dahsyat menghancurkan musuh.', unlocked: false }
+                    ]
+                });
+                gameState.party.push({
+                    name: 'Kael', role: 'Pencuri', hp: 95, maxHp: 95, mp: 50, maxMp: 50, atk: 25, skillPoints: 0, stunned: false,
+                    skills: [
+                        { id: 'ka1', name: 'Tusukan Bayangan', cost: 10, type: 'single', dmg: 48, desc: 'Serangan kritis mematikan.', unlocked: true },
+                        { id: 'ka2', name: 'Lemparan Belati', cost: 18, type: 'aoe', dmg: 30, desc: 'Lemparan belati ke banyak musuh.', unlocked: true },
+                        { id: 'ka3', name: 'Tebasan Rahasia', cost: 22, type: 'single', dmg: 68, desc: 'Serangan tak terlihat dari belakang lawan.', unlocked: false },
+                        { id: 'ka4', name: 'Racun Belati Gelap', cost: 16, type: 'single', dmg: 52, desc: 'Tusukan beracun berkecepatan tinggi.', unlocked: false },
+                        { id: 'ka5', name: 'Tarian Belati Maut', cost: 30, type: 'aoe', dmg: 60, desc: 'Serangan kilat mematikan mengiris barisan musuh.', unlocked: false }
+                    ]
+                });
+            } else {
+                gameState.party.push({
+                    name: 'Thaddeus', role: 'Biarawan', hp: 110, maxHp: 110, mp: 80, maxMp: 80, atk: 16, skillPoints: 0, stunned: false,
+                    skills: [
+                        { id: 't1', name: 'Doa Suci Pemulih', cost: 12, type: 'heal', desc: 'Memulihkan 45 HP tim.', unlocked: true },
+                        { id: 't2', name: 'Pukulan Mantra', cost: 14, type: 'single', dmg: 36, desc: 'Pukulan tangan kosong bermantra.', unlocked: true },
+                        { id: 't3', name: 'Cahaya Agung', cost: 25, type: 'heal', desc: 'Pemulihan besar-besaran untuk seluruh anggota tim.', unlocked: false },
+                        { id: 't4', name: 'Pukulan Petir Kudus', cost: 20, type: 'single', dmg: 58, desc: 'Hantaman bertumpu energi suci membakar target.', unlocked: false },
+                        { id: 't5', name: 'Perisai Jiwa Suci', cost: 30, type: 'heal', desc: 'Memulihkan 70 HP tim dan meregenerasi MP.', unlocked: false }
+                    ]
+                });
+                gameState.party.push({
+                    name: 'Eleanor', role: 'Paladin', hp: 135, maxHp: 135, mp: 50, maxMp: 50, atk: 19, skillPoints: 0, stunned: false,
+                    skills: [
+                        { id: 'e1', name: 'Tebasan Suci', cost: 12, type: 'single', dmg: 40, desc: 'Serangan fisik berkekuatan cahaya.', unlocked: true },
+                        { id: 'e2', name: 'Perisai Cahaya', cost: 18, type: 'heal', desc: 'Memberi pelindung HP pada tim.', unlocked: true },
+                        { id: 'e3', name: 'Vonis Kudus', cost: 28, type: 'single', dmg: 72, desc: 'Hukuman pedang suci menghujam musuh.', unlocked: false },
+                        { id: 'e4', name: 'Tebasan Badai Cahaya', cost: 24, type: 'aoe', dmg: 48, desc: 'Gelombang pedang suci menyapu barisan musuh.', unlocked: false },
+                        { id: 'e5', name: 'Benteng Keagungan Ronyho', cost: 35, type: 'heal', desc: 'Memulihkan HP tim serta membentengi pertahanan.', unlocked: false }
+                    ]
+                });
+            }
+        }
+
+        // WORLD MAP INTERACTION
+        function openWorldMap() {
+            showScreen('map');
+        }
+
+        function selectMapNode(nodeKey) {
+            if (nodeKey === 'DESA_TERBAKAR') {
+                startBattle('Rogue Bandits', () => {
+                    alert("Kamu menyelamatkan Desa Kilang dan mendapatkan artefak stamina (+20 Max HP untuk seluruh tim)!");
+                    gameState.party.forEach(p => p.maxHp += 20);
+                    startStoryAct3();
+                });
+            } else if (nodeKey === 'KARAVAN') {
+                openCampsite(() => startStoryAct3());
+            } else if (nodeKey === 'LEMBAH') {
+                startBattle('Dire Wolves', () => {
+                    gameState.exp += 60;
+                    alert("Kalian mendapatkan pertambahan EXP tinggi dari pertempuran Lembah Kabut!");
+                    startStoryAct3();
+                });
+            }
+        }
+
+        // TRAVEL EVENTS WITH RANDOM HIDDEN SKILL FIND
+        function triggerRandomTravelEvent(callback) {
+            const events = [
+                {
+                    type: 'story',
+                    title: "⛺ PERKEMAHAN DI TEPI HUTAN",
+                    desc: "Kalian beristirahat sejenak di bawah naungan pohon tua perbatasan Ronyho. Obrolan hangat dan santapan malam memulihkan semangat serta HP seluruh tim sebesar 30 poin!",
+                    action: () => { gameState.party.forEach(p => p.hp = Math.min(p.maxHp, p.hp + 30)); }
+                },
+                {
+                    type: 'story',
+                    title: "💬 PERBINCANGAN HANGAT ANGGOTA TIM",
+                    desc: "Rekan-rekan timmu saling berbagi impian setelah ancaman di Ronyho usai. Keharmonisan tim meningkatkan semangat tempur dan Mana Maksimal seluruh tim (+15 Max MP)!",
+                    action: () => { gameState.party.forEach(p => p.maxMp += 15); }
+                },
+                {
+                    type: 'story',
+                    title: "🔮 PENEMUAN KEAHLIAN TERSEMBUNYI HALOM",
+                    desc: "Di balik reruntuhan batu kuno, kamu menemukan batu gulungan kuno berisi ajaran langka! Sebuah Keahlian Tersembunyi Rahasia langsung terbuka untuk Karakter Utamamu!",
+                    action: () => {
+                        const heroSkills = gameState.skills[gameState.job];
+                        const secretSkill = {
+                            id: 'secret_1',
+                            name: '⚡ Mantra Tersembunyi Halom',
+                            cost: 20,
+                            type: 'aoe',
+                            dmg: 55,
+                            desc: 'Jurus tersembunyi yang melepaskan ledakan petir purba ke seluruh musuh.',
+                            unlocked: true
+                        };
+                        const exists = heroSkills.some(s => s.id === 'secret_1');
+                        if (!exists) {
+                            heroSkills.push(secretSkill);
+                        }
+                    }
+                }
+            ];
+
+            const ev = events[Math.floor(Math.random() * events.length)];
+            ev.action();
+            document.getElementById('event-title').innerText = ev.title;
+            document.getElementById('event-desc').innerText = ev.desc;
+            document.getElementById('btn-event-continue').innerText = "LANJUTKAN PERJALANAN ➔";
+            document.getElementById('btn-event-continue').onclick = () => callback();
+            showScreen('event');
+        }
+
+        // CAMPSITE FEATURE
+        function openCampsite(nextStoryCallback) {
+            gameState.postCampCallback = nextStoryCallback;
+            showScreen('camp');
+        }
+
+        document.getElementById('btn-camp-rest').onclick = () => {
+            gameState.party.forEach(p => {
+                p.hp = p.maxHp;
+                p.mp = p.maxMp;
+                p.stunned = false;
+            });
+            alert("Seluruh anggota tim telah beristirahat! HP & MP telah pulih sepenuhnya.");
+            if (gameState.postCampCallback) gameState.postCampCallback();
+        };
+
+        document.getElementById('btn-camp-skip').onclick = () => {
+            if (gameState.postCampCallback) gameState.postCampCallback();
+        };
+
+        // STORY SYSTEM
+        function setStoryText(actTitle, location, textBody, choices) {
+            document.getElementById('story-act-title').innerText = actTitle;
+            document.getElementById('story-location').innerText = location;
+            document.getElementById('story-text-body').innerText = textBody;
+
+            const container = document.getElementById('story-choices-container');
+            container.innerHTML = '';
+
+            choices.forEach(c => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left parchment-card hover:border-amber-500 p-3.5 rounded-xl font-story text-amber-200 text-sm transition flex justify-between items-center";
+                btn.innerHTML = `<span>${c.text}</span> <span class="text-xs text-amber-500 font-title">➔</span>`;
+                btn.onclick = c.action;
+                container.appendChild(btn);
+            });
+
+            showScreen('story');
+        }
+
+        function startStoryAct1() {
+            setStoryText(
+                "BABAK 1: SERANGAN GERBANG KOTA RONYHO",
+                "Pinggiran Kota Ronyho",
+                `Terompet bahaya bergema keras dari arah gerbang utama Kota Ronyho! Gerombolan Goblin ganas yang dipimpin raider brutal mulai membakar pemukiman warga. Kamu dan tim pendamping pilihanmu segera menarik senjata!`,
+                [
+                    { text: "Terjang musuh dan amankan gerbang Kota Ronyho!", action: () => startBattle('Goblin Ambush', () => startStoryAct2()) }
+                ]
+            );
+        }
+
+        function startStoryAct2() {
+            setStoryText(
+                "BABAK 2: PANGGILAN RAJA ARTHUR II",
+                "Ruang Tahta Kerajaan Ronyho",
+                `Setelah berhasil memukul mundur gerombolan Goblin, Raja Arthur II memanggil kalian ke hadapan Istana: "Kalian telah membuktikan keberanian di gerbang Ronyho. Sekarang, aku menugaskan kalian untuk menerobos Goa Malakor dan membasmi Goblin King! Apakah kalian siap?"`,
+                [
+                    { text: `"Buka Peta Wilayah Ronyho untuk menentukan strategi eksplorasi."`, action: () => openWorldMap() },
+                    { text: `"Kami butuh imbalan emas dua kali lipat dulu!" (Tamak)`, action: () => triggerKingExecution() },
+                    { text: `"Pengawalmu hanya diam saat rakyat dibantai. Kami menolak!" (Lancang)`, action: () => startBattle('Royal Guards Challenge', () => openWorldMap()) }
+                ]
+            );
+        }
+
+        function triggerKingExecution() {
+            setStoryText(
+                "BABAK 2: EKSEKUSI KERAZAN RONYHO",
+                "Ruang Tahta Kerajaan Ronyho",
+                `Raja Arthur II memukul kursi tahtanya dengan murka! "Prajurit lancang! Pengawal, eksekusi mereka saat ini juga!" Pasukan pemanah kerajaan meluncurkan anak panah sebelum kalian sempat menarik pedang.`,
+                [
+                    { text: "Pasrah pada takdir...", action: () => showEnding('EXECUTED', '💀 GUGUR AKIBAT KELANCANGAN', 'Petualanganmu berakhir tragis di Ruang Tahta. Raja Arthur II tidak mentolerir ketamakan maupun ketidaksetiaan.') }
+                ]
+            );
+        }
+
+        function startStoryAct3() {
+            setStoryText(
+                "BABAK 3: PINTO GOA MALAKOR",
+                "Pegunungan Malakor",
+                `Setelah menempuh jalur ekspedisi, kalian tiba di mulut Goa Malakor yang diselimuti kegelapan. Aroma busuk dan raungan misterius terdengar samar-samar dari dalam goa.`,
+                [
+                    { text: "Melangkah masuk menyusuri lorong goa.", action: () => startStoryAct4() },
+                    { text: "Rasa takut melanda, memutuskan untuk berbalik arah ke Ronyho.", action: () => showEnding('COWARD', '📜 SECRET ENDING: MEMILIH HIDUP TENANG', 'Kamu memutuskan bahwa keselamatan nyawa lebih berharga dari gelar pahlawan. Kamu kembali dan membuka kedai minum sendiri di Ronyho.') }
+                ]
+            );
+        }
+
+        function startStoryAct4() {
+            setStoryText(
+                "BABAK 4: LORONG BERCABANG GOA MALAKOR",
+                "Kedalaman Goa Malakor",
+                `Di dalam goa, jalan terbelah menjadi empat lorong gelap. Hembusan angin dingin membawa suara-suara misterius dari masing-masing lorong goa!`,
+                [
+                    { text: "Pilih Lorong Kiri (Terdengar gumaman mantra sihir)", action: () => startBattle('Goblin Shaman Lair', () => startStoryBossPre()) },
+                    { text: "Pilih Lorong Tengah (Terdengar derap langkah berat)", action: () => startBattle('Hobgoblin Vanguard', () => startStoryBossPre()) },
+                    { text: "Pilih Lorong Kanan (Penuh dengan sarang laba-laba raksasa)", action: () => startBattle('Broodmother Cavern', () => startStoryBossPre()) },
+                    { text: "🔮 Pilih Lorong Kuno Terlarang (Tersesat & Merasakan Haus Darah Gaib)", action: () => startBattle('Void Ancient Dragon', () => showEnding('VOID_MASTER', '🔮 PENGUASA VOID & ALAM SEMESTA (SECRET ENDING)', 'Dengan menaklukkan Naga Purba Void di lorong terlarang goa, kamu menyerap takdir energi Void murni! Kamu naik tahta menjadi Penguasa tertinggi Halom!')) }
+                ]
+            );
+        }
+
+        function startStoryBossPre() {
+            openCampsite(() => {
+                setStoryText(
+                    "BABAK 5: RUANG TAHTA GOBLIN KING",
+                    "Inti Goa Malakor",
+                    `Kalian memasuki ruang batu raksasa. Di atas tumpukan harta karun curian dari Ronyho, duduk GOBLIN KING bertubuh raksasa didampingi Dukun Goblin & Pengawal Elite! Dia meraung mengancam!`,
+                    [
+                        { text: "Bersiap untuk pertarungan puncak!", action: () => startBattle('Goblin King', () => startStoryPostBossChoice()) }
+                    ]
+                );
+            });
+        }
+
+        function startStoryPostBossChoice() {
+            setStoryText(
+                "BABAK AKHIR: TAKDIR RONYHO & HALOM",
+                "Ruang Tahta Kerajaan Ronyho",
+                `Dengan tumbangnya Goblin King, kalian kembali ke Kota Ronyho membawa mahkotanya. Raja Arthur II tersenyum dingin di tahta emasnya: "Serahkan mahkota itu dan berlututlah!" Rekan-rekanmu menatapmu... Keputusan ada di tanganmu.`,
+                [
+                    { text: "Berlutut dan terima gelar Pahlawan Agung Ronyho.", action: () => showEnding('HERO', '🛡️ PAHLAWAN SEJATI RONYHO', 'Kamu dielu-elukan oleh seluruh rakyat Ronyho dan diangkat menjadi komandan tertinggi pelindung kerajaan.') },
+                    { text: "Kuasai mahkota dan gulingkan Raja Arthur II! (Pertempuran Raja)", action: () => startBattle('The King & Royal Army', () => showEnding('SOVEREIGN', '👑 RAJA BARU RONYHO', 'Kamu telah menggulingkan Raja Arthur II dan mengklaim tahta! Kini kamu memerintah Kota Ronyho dan tanah Halom dengan kekuasaan penuh.')) }
+                ]
+            );
+        }
+
+        // TACTICAL CARDS JRPG FULL PARTY BATTLE SYSTEM
+        let currentEncounterName = '';
+        let combatPostCallback = null;
+
+        function applyDifficultyScale(baseVal) {
+            return Math.round(baseVal * gameState.difficultyMult);
+        }
+
+        function startBattle(encounterType, onWinCallback) {
+            currentEncounterName = encounterType;
+            combatPostCallback = onWinCallback;
+            gameState.enemies = [];
+            gameState.currentTurnIndex = 0;
+
+            // Reset turn stun state
+            gameState.party.forEach(p => p.stunned = false);
+
+            const logContainer = document.getElementById('combat-action-log');
+            logContainer.innerHTML = `<div class="text-amber-500/80">--- Pertempuran dimulai! [Tingkat: ${gameState.difficultyLabel}] ---</div>`;
+
+            if (encounterType === 'Goblin Ambush') {
+                gameState.enemies.push({ name: 'Goblin Raider A', hp: applyDifficultyScale(65), maxHp: applyDifficultyScale(65), atk: applyDifficultyScale(12), status: 'Normal', stunned: false });
+                gameState.enemies.push({ name: 'Goblin Raider B', hp: applyDifficultyScale(65), maxHp: applyDifficultyScale(65), atk: applyDifficultyScale(12), status: 'Normal', stunned: false });
+            } else if (encounterType === 'Rogue Bandits') {
+                gameState.enemies.push({ name: 'Ketua Penyamun', hp: applyDifficultyScale(90), maxHp: applyDifficultyScale(90), atk: applyDifficultyScale(16), status: 'Buas', stunned: false });
+                gameState.enemies.push({ name: 'Pemanah Perampok', hp: applyDifficultyScale(65), maxHp: applyDifficultyScale(65), atk: applyDifficultyScale(14), status: 'Lincah', stunned: false });
+            } else if (encounterType === 'Dire Wolves') {
+                gameState.enemies.push({ name: 'Serigala Pemimpin', hp: applyDifficultyScale(100), maxHp: applyDifficultyScale(100), atk: applyDifficultyScale(18), status: 'Ganas', stunned: false });
+                gameState.enemies.push({ name: 'Serigala Pemburu', hp: applyDifficultyScale(70), maxHp: applyDifficultyScale(70), atk: applyDifficultyScale(14), status: 'Normal', stunned: false });
+            } else if (encounterType === 'Royal Guards Challenge') {
+                gameState.enemies.push({ name: 'Kapten Pengawal Ronyho', hp: applyDifficultyScale(160), maxHp: applyDifficultyScale(160), atk: applyDifficultyScale(22), status: 'Tangguh', stunned: false });
+            } else if (encounterType === 'Goblin Shaman Lair') {
+                gameState.enemies.push({ name: 'Dukun Goblin', hp: applyDifficultyScale(130), maxHp: applyDifficultyScale(130), atk: applyDifficultyScale(18), status: 'Penyihir', stunned: false });
+                gameState.enemies.push({ name: 'Pengawal Goblin', hp: applyDifficultyScale(90), maxHp: applyDifficultyScale(90), atk: applyDifficultyScale(14), status: 'Normal', stunned: false });
+            } else if (encounterType === 'Hobgoblin Vanguard') {
+                gameState.enemies.push({ name: 'Hobgoblin Brute', hp: applyDifficultyScale(190), maxHp: applyDifficultyScale(190), atk: applyDifficultyScale(24), status: 'Kuat', stunned: false });
+            } else if (encounterType === 'Broodmother Cavern') {
+                gameState.enemies.push({ name: 'Induk Laba-Laba', hp: applyDifficultyScale(160), maxHp: applyDifficultyScale(160), atk: applyDifficultyScale(20), status: 'Beracun', stunned: false });
+            } else if (encounterType === 'Goblin King') {
+                // ENHANCED GOBLIN KING WITH MINIONS & SKILLS
+                gameState.enemies.push({ name: 'GOBLIN KING (BOSS)', hp: applyDifficultyScale(480), maxHp: applyDifficultyScale(480), atk: applyDifficultyScale(32), status: 'Murka', isBoss: true, stunned: false });
+                gameState.enemies.push({ name: 'Dukun Goblin Sumpah', hp: applyDifficultyScale(120), maxHp: applyDifficultyScale(120), atk: applyDifficultyScale(18), status: 'Penyokong', stunned: false });
+                gameState.enemies.push({ name: 'Pengawal Elite Goblin', hp: applyDifficultyScale(150), maxHp: applyDifficultyScale(150), atk: applyDifficultyScale(22), status: 'Pelindung', stunned: false });
+            } else if (encounterType === 'The King & Royal Army') {
+                // ENHANCED KING ARTHUR WITH SKILLS
+                gameState.enemies.push({ name: 'Raja Arthur II (BOSS)', hp: applyDifficultyScale(520), maxHp: applyDifficultyScale(520), atk: applyDifficultyScale(34), status: 'Raja', isArthur: true, stunned: false });
+                gameState.enemies.push({ name: 'Panglima Kerajaan Ronyho', hp: applyDifficultyScale(260), maxHp: applyDifficultyScale(260), atk: applyDifficultyScale(26), status: 'Panglima', isPanglima: true, stunned: false });
+                gameState.enemies.push({ name: 'Pemanah Istana Elite', hp: applyDifficultyScale(140), maxHp: applyDifficultyScale(140), atk: applyDifficultyScale(20), status: 'Pemanah', stunned: false });
+            } else if (encounterType === 'Void Ancient Dragon') {
+                // SECRET BOSS INSIDE CAVE
+                gameState.enemies.push({ name: 'NAGA PURBA VOID (SECRET BOSS)', hp: applyDifficultyScale(750), maxHp: applyDifficultyScale(750), atk: applyDifficultyScale(38), status: 'Kuno', isVoidDragon: true, stunned: false });
+            }
+
+            renderCombatUI();
+            showScreen('combat');
+        }
+
+        function getCurrentActor() {
+            let attempts = 0;
+            while (attempts < gameState.party.length) {
+                const actor = gameState.party[gameState.currentTurnIndex];
+                if (actor && actor.hp > 0) {
+                    if (actor.stunned) {
+                        actor.stunned = false; // Reset 1 turn stun
+                        addCombatLog(`💫 ${actor.name} terkejut/lumpuh dan kehilangan 1 giliran ini!`, "text-amber-400 font-bold");
+                        gameState.currentTurnIndex = (gameState.currentTurnIndex + 1) % gameState.party.length;
+                        attempts++;
+                        continue;
+                    }
+                    return actor;
+                }
+                gameState.currentTurnIndex = (gameState.currentTurnIndex + 1) % gameState.party.length;
+                attempts++;
+            }
+            return gameState.party[0];
+        }
+
+        function advanceTurn() {
+            const aliveEnemies = gameState.enemies.filter(e => e.hp > 0);
+            const aliveParty = gameState.party.filter(p => p.hp > 0);
+
+            if (aliveEnemies.length === 0 || aliveParty.length === 0) {
+                checkCombatState();
+                return;
+            }
+
+            gameState.currentTurnIndex++;
+            if (gameState.currentTurnIndex >= gameState.party.length) {
+                gameState.currentTurnIndex = 0;
+                triggerEnemyTurn();
+            } else {
+                renderCombatUI();
+            }
+        }
+
+        function renderCombatUI() {
+            const activeActor = getCurrentActor();
+            document.getElementById('ui-active-actor-name').innerText = `${activeActor.name} (${activeActor.role})`;
+            document.getElementById('ui-combat-turn-log').innerText = `Giliran: ${activeActor.name}`;
+
+            // Render Enemy Cards
+            const enemyContainer = document.getElementById('enemy-cards-container');
+            enemyContainer.innerHTML = '';
+
+            gameState.enemies.forEach((e) => {
+                const hpPct = Math.max(0, Math.floor((e.hp / e.maxHp) * 100));
+                const card = document.createElement('div');
+                card.className = `parchment-card p-2.5 rounded-xl flex flex-col justify-between border-2 ${e.hp <= 0 ? 'opacity-30 border-stone-800' : (e.name.includes('VOID') ? 'border-purple-600 bg-purple-950/20' : 'border-red-900/60')}`;
+                card.innerHTML = `
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="font-title text-amber-200 text-xs font-bold truncate">${e.name}</span>
+                        <span class="text-[9px] bg-red-950 text-red-300 px-1.5 py-0.5 rounded border border-red-800">${e.stunned ? 'STUN (1T)' : e.status}</span>
+                    </div>
+                    <div class="w-full bg-stone-900 h-2 rounded-full overflow-hidden my-1.5 border border-stone-700">
+                        <div class="bg-gradient-to-r from-red-700 to-red-500 h-full transition-all duration-300" style="width: ${hpPct}%"></div>
+                    </div>
+                    <div class="text-right text-[10px] text-amber-400 font-bold">HP: ${e.hp} / ${e.maxHp}</div>
+                `;
+                enemyContainer.appendChild(card);
+            });
+
+            // Render Party HUD Cards
+            const partyContainer = document.getElementById('combat-party-hud');
+            partyContainer.innerHTML = '';
+
+            gameState.party.forEach((p) => {
+                const hpPct = Math.max(0, Math.floor((p.hp / p.maxHp) * 100));
+                const isActive = (p === activeActor);
+                const card = document.createElement('div');
+                card.className = `parchment-card p-2.5 rounded-xl flex flex-col justify-between border-amber-900 ${isActive ? 'active-turn-card' : ''} ${p.hp <= 0 ? 'opacity-30' : ''}`;
+                card.innerHTML = `
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="font-title text-amber-200 text-xs truncate ${isActive ? 'text-sky-300 font-bold' : ''}">${p.name}</span>
+                        <span class="text-[10px] text-amber-400 font-bold">${p.role}</span>
+                    </div>
+                    <div class="w-full bg-stone-900 h-2 rounded-full overflow-hidden mb-1">
+                        <div class="bg-gradient-to-r from-emerald-600 to-emerald-400 h-full transition-all duration-300" style="width: ${hpPct}%"></div>
+                    </div>
+                    <div class="flex justify-between text-[10px] text-stone-400 font-bold">
+                        <span>HP: ${p.hp}/${p.maxHp}</span>
+                        <span>MP: ${p.mp}/${p.maxMp}</span>
+                    </div>
+                `;
+                partyContainer.appendChild(card);
+            });
+        }
+
+        // TARGET SELECTOR SYSTEM
+        function openTargetSelector(onSelectTarget) {
+            const container = document.getElementById('target-list-container');
+            container.innerHTML = '';
+
+            gameState.enemies.forEach((e) => {
+                if (e.hp > 0) {
+                    const btn = document.createElement('button');
+                    btn.className = "w-full text-left parchment-card hover:border-red-500 p-3 rounded-xl font-title text-amber-200 text-xs transition flex justify-between items-center";
+                    btn.innerHTML = `<span>⚔️ ${e.name}</span> <span class="text-red-400 font-bold">HP: ${e.hp}</span>`;
+                    btn.onclick = () => {
+                        document.getElementById('modal-target-select').classList.add('hidden');
+                        onSelectTarget(e);
+                    };
+                    container.appendChild(btn);
+                }
+            });
+
+            document.getElementById('modal-target-select').classList.remove('hidden');
+        }
+
+        document.getElementById('btn-cancel-target').onclick = () => {
+            document.getElementById('modal-target-select').classList.add('hidden');
+        };
+
+        // COMBAT ACTIONS
+        document.getElementById('btn-act-attack').onclick = () => {
+            const actor = getCurrentActor();
+            openTargetSelector((targetEnemy) => {
+                const dmg = actor.atk + Math.floor(Math.random() * 8);
+                targetEnemy.hp = Math.max(0, targetEnemy.hp - dmg);
+                addCombatLog(`⚔️ ${actor.name} menyerang biasa ke ${targetEnemy.name} sebesar ${dmg} damage!`, "text-amber-300");
+                advanceTurn();
+            });
+        };
+
+        document.getElementById('btn-act-defend').onclick = () => {
+            const actor = getCurrentActor();
+            actor.hp = Math.min(actor.maxHp, actor.hp + 20);
+            actor.mp = Math.min(actor.maxMp, actor.mp + 10);
+            addCombatLog(`🛡️ ${actor.name} mengambil posisi bertahan (+20 HP, +10 MP).`, "text-sky-300");
+            advanceTurn();
+        };
+
+        document.getElementById('btn-act-skill').onclick = () => {
+            const actor = getCurrentActor();
+            const container = document.getElementById('skill-list-container');
+            container.innerHTML = '';
+
+            let skillList = [];
+            if (actor.isHero) {
+                skillList = gameState.skills[gameState.job].filter(s => s.unlocked);
+            } else if (actor.skills) {
+                skillList = actor.skills.filter(s => s.unlocked);
+            }
+
+            if (skillList.length === 0) {
+                alert("Belum ada keahlian yang dibuka untuk karakter ini!");
+                return;
+            }
+
+            skillList.forEach(s => {
+                const canAfford = actor.mp >= s.cost;
+                const btn = document.createElement('button');
+                btn.className = `w-full text-left parchment-card p-3 rounded-xl border ${canAfford ? 'border-amber-600 hover:border-amber-400' : 'border-stone-800 opacity-40'} transition`;
+                btn.innerHTML = `
+                    <div class="flex justify-between font-title text-xs text-amber-300 mb-1">
+                        <span>${s.name} ${s.branch ? `(${s.branch})` : ''}</span>
+                        <span>MP: ${s.cost}</span>
+                    </div>
+                    <p class="text-[11px] text-stone-400">${s.desc}</p>
+                `;
+                if (canAfford) {
+                    btn.onclick = () => {
+                        document.getElementById('modal-skills').classList.add('hidden');
+                        executeSkill(actor, s);
+                    };
+                }
+                container.appendChild(btn);
+            });
+
+            document.getElementById('modal-skills').classList.remove('hidden');
+        };
+
+        document.getElementById('btn-close-skills').onclick = () => {
+            document.getElementById('modal-skills').classList.add('hidden');
+        };
+
+        function executeSkill(actor, skill) {
+            if (actor.mp < skill.cost) return;
+            actor.mp -= skill.cost;
+
+            if (skill.type === 'single') {
+                openTargetSelector((target) => {
+                    const dmg = (skill.dmg || 45) + Math.floor(Math.random() * 6);
+                    target.hp = Math.max(0, target.hp - dmg);
+                    
+                    // Exact 1 Turn Stun Mechanism for Knight Shield Slam & Stun Skills
+                    if (skill.stun) {
+                        target.stunned = true;
+                        addCombatLog(`💫 ${actor.name} menggunakan [${skill.name}]! ${target.name} terkena STUN (melompati 1 giliran)! (${dmg} damage)`, "text-amber-400 font-bold");
+                    } else {
+                        addCombatLog(`🔮 ${actor.name} mengaktifkan jurus [${skill.name}] pada ${target.name} sebesar ${dmg} damage!`, "text-cyan-300");
+                    }
+                    advanceTurn();
+                });
+            } else if (skill.type === 'aoe') {
+                const dmg = skill.dmg || 35;
+                gameState.enemies.forEach(e => e.hp = Math.max(0, e.hp - dmg));
+                addCombatLog(`💥 ${actor.name} melepaskan [${skill.name}] menghantam SELURUH musuh sebesar ${dmg} damage!`, "text-purple-300");
+                advanceTurn();
+            } else if (skill.type === 'heal') {
+                gameState.party.forEach(p => {
+                    if (p.hp > 0) p.hp = Math.min(p.maxHp, p.hp + 45);
+                });
+                addCombatLog(`✨ ${actor.name} mengumandangkan [${skill.name}] memulihkan 45 HP seluruh tim!`, "text-emerald-300");
+                advanceTurn();
+            } else {
+                addCombatLog(`📜 ${actor.name} mengaktifkan jurus [${skill.name}].`, "text-amber-200");
+                advanceTurn();
+            }
+        }
+
+        function triggerEnemyTurn() {
+            addCombatLog(`⚠️ Giliran barisan musuh menyerang!`, "text-red-400 font-bold");
+            setTimeout(() => {
+                gameState.enemies.forEach(e => {
+                    if (e.hp > 0) {
+                        if (e.stunned) {
+                            e.stunned = false; // Reset 1 turn stun for enemy
+                            addCombatLog(`💫 ${e.name} tertegun oleh serangan dan tidak bisa bergerak pada giliran ini!`, "text-yellow-400");
+                            return;
+                        }
+
+                        const aliveParty = gameState.party.filter(p => p.hp > 0);
+                        if (aliveParty.length > 0) {
+                            // ENHANCED ENEMY & BOSS SKILL LOGIC
+                            if (e.isBoss) {
+                                // GOBLIN KING SPECIAL SKILLS
+                                const skillChoice = Math.random();
+                                if (skillChoice < 0.4) {
+                                    // Heavy Skill
+                                    const targetAlly = aliveParty[Math.floor(Math.random() * aliveParty.length)];
+                                    const dmg = e.atk + 25;
+                                    targetAlly.hp = Math.max(0, targetAlly.hp - dmg);
+                                    addCombatLog(`💥 ${e.name} mengayunkan [AMUK GADA BERDURI] menghantam ${targetAlly.name} sebesar ${dmg} DAMAGE!`, "text-red-500 font-bold");
+                                } else if (skillChoice < 0.7) {
+                                    // AOE Roar
+                                    aliveParty.forEach(p => p.hp = Math.max(0, p.hp - (e.atk + 8)));
+                                    addCombatLog(`📢 ${e.name} melepaskan [RAUNGAN PERANG GOBLIN] merusak seluruh anggota tim!`, "text-orange-400 font-bold");
+                                } else {
+                                    // Normal Attack
+                                    const targetAlly = aliveParty[Math.floor(Math.random() * aliveParty.length)];
+                                    const dmg = e.atk + Math.floor(Math.random() * 8);
+                                    targetAlly.hp = Math.max(0, targetAlly.hp - dmg);
+                                    addCombatLog(`👹 ${e.name} menggeprak ${targetAlly.name} sebesar ${dmg} damage!`, "text-red-300");
+                                }
+                            } else if (e.isArthur) {
+                                // KING ARTHUR SPECIAL HIGH-TIER SKILLS
+                                const skillChoice = Math.random();
+                                if (skillChoice < 0.45) {
+                                    const targetAlly = aliveParty[Math.floor(Math.random() * aliveParty.length)];
+                                    const dmg = e.atk + 35;
+                                    targetAlly.hp = Math.max(0, targetAlly.hp - dmg);
+                                    addCombatLog(`⚔️ King Arthur II meluncurkan [VONIS PEDANG EMAS] merobek ${targetAlly.name} sebesar ${dmg} DAMAGE!!`, "text-yellow-400 font-bold");
+                                } else if (skillChoice < 0.8) {
+                                    e.hp = Math.min(e.maxHp, e.hp + 50);
+                                    addCombatLog(`🛡️ King Arthur II mengaktifkan [PERISAI KERAJAAN RONYHO] memulihkan 50 HP!`, "text-amber-300 font-bold");
+                                } else {
+                                    const targetAlly = aliveParty[Math.floor(Math.random() * aliveParty.length)];
+                                    const dmg = e.atk + 12;
+                                    targetAlly.hp = Math.max(0, targetAlly.hp - dmg);
+                                    addCombatLog(`👑 King Arthur II menyerang ${targetAlly.name} sebesar ${dmg} damage!`, "text-red-300");
+                                }
+                            } else if (e.isPanglima) {
+                                // PANGLIMA SKILLS
+                                const targetAlly = aliveParty[Math.floor(Math.random() * aliveParty.length)];
+                                const dmg = e.atk + 18;
+                                targetAlly.hp = Math.max(0, targetAlly.hp - dmg);
+                                addCombatLog(`🛡️ Panglima Kerajaan mengeksekusi [TEBASAN KRISTAL] ke ${targetAlly.name} sebesar ${dmg} damage!`, "text-orange-300");
+                            } else if (e.isVoidDragon) {
+                                // SECRET BOSS AOE ATTACK
+                                aliveParty.forEach(p => {
+                                    const dmg = e.atk + Math.floor(Math.random() * 15);
+                                    p.hp = Math.max(0, p.hp - dmg);
+                                });
+                                addCombatLog(`🌌 ${e.name} melepaskan semburan [VOID BREATH] merusak SELURUH anggota tim!`, "text-purple-400 font-bold");
+                            } else {
+                                // STANDARD ENEMY ATTACK
+                                const targetAlly = aliveParty[Math.floor(Math.random() * aliveParty.length)];
+                                const dmg = e.atk + Math.floor(Math.random() * 6);
+                                targetAlly.hp = Math.max(0, targetAlly.hp - dmg);
+                                addCombatLog(`👹 ${e.name} menyerang ${targetAlly.name} sebesar ${dmg} damage!`, "text-red-300");
+                            }
+                        }
+                    }
+                });
+
+                const hero = gameState.party[0];
+                if (hero.hp <= 0) {
+                    showEnding('DEFEATED', '💀 GUGUR DALAM PERTEMPURAN', 'Tim petualangmu tewas di tangan lawan. Nama dan perjuanganmu kini terkubur dalam sejarah Ronyho.');
+                } else {
+                    renderCombatUI();
+                }
+            }, 600);
+        }
+
+        function checkCombatState() {
+            const aliveEnemies = gameState.enemies.filter(e => e.hp > 0);
+
+            if (aliveEnemies.length === 0) {
+                addCombatLog(`🎉 Pertempuran selesai! Seluruh musuh berhasil dikalahkan!`, "text-emerald-400 font-bold");
+
+                // Auto Rest & Restore HP/MP for all party members after every winning battle
+                gameState.party.forEach(member => {
+                    member.hp = member.maxHp;
+                    member.mp = member.maxMp;
+                    member.stunned = false;
+                });
+                addCombatLog(`💚 Tim beristirahat sejenak! HP & MP seluruh anggota tim telah dipulihkan sepenuhnya!`, "text-teal-300 font-bold");
+
+                // EXP & Equal Level Up / Skill Points distribution for ALL party members
+                gameState.exp += 50;
+                if (gameState.exp >= 50) {
+                    gameState.level++;
+                    gameState.exp = 0;
+                    
+                    // Separate +1 Skill point equally for EVERY party member
+                    gameState.party.forEach(member => {
+                        member.skillPoints = (member.skillPoints || 0) + 1;
+                    });
+
+                    document.getElementById('ui-hero-level').innerText = gameState.level;
+                    document.getElementById('btn-open-skill-tree').classList.remove('hidden');
+                    addCombatLog(`⭐ LEVEL UP! Tim mencapai Level ${gameState.level}! SETIAP anggota tim mendapatkan +1 Poin Keahlian terpisah!`, "text-yellow-300 font-bold");
+                }
+
+                setTimeout(() => {
+                    if (combatPostCallback) {
+                        combatPostCallback();
+                    }
+                }, 800);
+            }
+        }
+
+        // SEPARATE BRANCHING SKILL TREE SYSTEM FOR HERO & ALL PARTY MEMBERS
+        document.getElementById('btn-open-skill-tree').onclick = () => {
+            gameState.selectedTreeMemberIndex = 0;
+            renderSkillTreeTabs();
+            renderSkillTreeContent();
+            document.getElementById('modal-skill-tree').classList.remove('hidden');
+        };
+
+        document.getElementById('btn-close-tree').onclick = () => {
+            document.getElementById('modal-skill-tree').classList.add('hidden');
+        };
+
+        function renderSkillTreeTabs() {
+            const tabsContainer = document.getElementById('skill-tree-tabs');
+            tabsContainer.innerHTML = '';
+
+            gameState.party.forEach((member, index) => {
+                const btn = document.createElement('button');
+                const isSelected = (index === gameState.selectedTreeMemberIndex);
+                btn.className = `px-3 py-1.5 rounded-lg text-xs font-title transition whitespace-nowrap ${isSelected ? 'bg-amber-600 text-stone-900 font-bold' : 'bg-stone-800 text-amber-200 hover:bg-stone-700'}`;
+                btn.innerText = `${member.name} (Poin: ${member.skillPoints || 0})`;
+                btn.onclick = () => {
+                    gameState.selectedTreeMemberIndex = index;
+                    renderSkillTreeTabs();
+                    renderSkillTreeContent();
+                };
+                tabsContainer.appendChild(btn);
+            });
+        }
+
+        function renderSkillTreeContent() {
+            const member = gameState.party[gameState.selectedTreeMemberIndex];
+            document.getElementById('tree-points-count').innerText = member.skillPoints || 0;
+            
+            const grid = document.getElementById('tree-skills-grid');
+            grid.innerHTML = '';
+
+            let skillList = [];
+
+            if (member.isHero) {
+                skillList = gameState.skills[gameState.job];
+            } else if (member.skills) {
+                skillList = member.skills;
+            }
+
+            skillList.forEach(s => {
+                const card = document.createElement('div');
+                card.className = `parchment-card p-4 rounded-xl border ${s.unlocked ? 'border-emerald-600 bg-emerald-950/20' : 'border-amber-900'} flex flex-col justify-between`;
+                card.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <h4 class="font-title text-amber-300 text-xs font-bold">${s.name}</h4>
+                            <span class="text-[9px] uppercase font-bold ${s.unlocked ? 'text-emerald-400' : 'text-amber-500'}">${s.unlocked ? 'TERBUKA' : 'TERKUNCI'}</span>
+                        </div>
+                        ${s.branch ? `<span class="text-[10px] text-amber-400 font-bold block mb-1">Spesialisasi: ${s.branch}</span>` : ''}
+                        <p class="text-xs text-stone-400 mb-3">${s.desc}</p>
+                    </div>
+                    ${!s.unlocked ? `
+                        <button class="w-full bg-amber-800 hover:bg-amber-700 text-amber-100 font-title text-xs py-1.5 rounded-lg transition" onclick="unlockSkillNode('${s.id}')">
+                            BUKA JURUS (1 POIN ${member.name.toUpperCase()})
+                        </button>
+                    ` : ''}
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        window.unlockSkillNode = function(id) {
+            const member = gameState.party[gameState.selectedTreeMemberIndex];
+            if ((member.skillPoints || 0) <= 0) {
+                alert(`Poin keahlian ${member.name} tidak cukup!`);
+                return;
+            }
+
+            let skillList = member.isHero ? gameState.skills[gameState.job] : member.skills;
+            const skill = skillList.find(s => s.id === id);
+
+            if (skill && !skill.unlocked) {
+                skill.unlocked = true;
+                member.skillPoints--;
+                renderSkillTreeTabs();
+                renderSkillTreeContent();
+            }
+        };
+
+        // ENDING DISPLAY
+        function showEnding(type, title, body) {
+            document.getElementById('ending-title').innerText = title;
+            document.getElementById('ending-body').innerText = body;
+
+            if (type === 'COWARD') document.getElementById('ending-icon').innerText = '📜';
+            else if (type === 'HERO') document.getElementById('ending-icon').innerText = '🛡️';
+            else if (type === 'SOVEREIGN') document.getElementById('ending-icon').innerText = '👑';
+            else if (type === 'VOID_MASTER') document.getElementById('ending-icon').innerText = '🔮';
+            else document.getElementById('ending-icon').innerText = '💀';
+
+            showScreen('ending');
+        }
+    </script>
+</body>
+</html>
